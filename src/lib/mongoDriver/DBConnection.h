@@ -26,6 +26,8 @@
 * Author: Fermín Galán
 */
 
+#include <mongoc/mongoc.h>
+
 #include "mongo/client/dbclient.h"  // FIXME OLD-DR: change in next PoC stage
 
 namespace orion
@@ -38,6 +40,7 @@ class DBConnection
 {
  private:
   mongo::DBClientBase* dbcP;
+  mongoc_client_t*     __dbcP;  // FIXME OLD-DR
 
  public:
   // methods to be used by client code (without references to low-level driver code)
@@ -46,7 +49,7 @@ class DBConnection
   bool isNull(void);
 
   // methods to be used only by mongoDriver/ code (with references to low-level driver code)
-  explicit DBConnection(mongo::DBClientBase* _dbc);
+  explicit DBConnection(mongo::DBClientBase* _dbcP, mongoc_client_t* ___dbcP);
   mongo::DBClientBase* get(void);
 };
 }

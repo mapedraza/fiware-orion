@@ -34,6 +34,7 @@ namespace orion
 DBConnection::DBConnection()
 {
   dbcP = NULL;
+  __dbcP = NULL;
 }
 
 
@@ -44,7 +45,7 @@ DBConnection::DBConnection()
 */
 bool DBConnection::operator== (const DBConnection &rhs)
 {
-  return dbcP == rhs.dbcP;
+  return ((dbcP == rhs.dbcP) && (__dbcP == rhs.__dbcP));
 }
 
 
@@ -55,7 +56,7 @@ bool DBConnection::operator== (const DBConnection &rhs)
 */
 bool DBConnection::isNull(void)
 {
-  return (dbcP == NULL);
+  return ((dbcP == NULL) && (__dbcP == NULL));
 }
 
 
@@ -67,9 +68,10 @@ bool DBConnection::isNull(void)
 *
 * DBConnection::DBConnection -
 */
-DBConnection::DBConnection(mongo::DBClientBase* _dbcP)
+DBConnection::DBConnection(mongo::DBClientBase* _dbcP, mongoc_client_t* ___dbcP)
 {
   dbcP = _dbcP;
+  __dbcP = ___dbcP;
 }
 
 

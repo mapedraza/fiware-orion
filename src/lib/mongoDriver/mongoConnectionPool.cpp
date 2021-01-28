@@ -112,7 +112,8 @@ static orion::DBConnection mongoConnect
 )
 {
   std::string   err;
-  mongo::DBClientBase* connection = NULL;
+  mongo::DBClientBase* connection = NULL;  // FIXME OLD-DR
+  mongoc_client_t* _connection = NULL;
 
   // FIXME OLD-DR: remove orion:: mark
   LM_T(LmtMongo, ("orion:: Connection info: dbName='%s', rplSet='%s', timeout=%f", db, rplSet, timeout));
@@ -249,6 +250,8 @@ static orion::DBConnection mongoConnect
   orion::BSONObjBuilder bob;
   bob.append("buildinfo", 1);
 
+  // FIXME OLD-VER: version check skipped by the moment
+#if 0
   orion::runCollectionCommand(orion::DBConnection(connection), "admin", bob.obj(), &result, &err);
   std::string versionString = std::string(getStringFieldFF(result, "version"));
   if (!versionParse(versionString, mongoVersionMayor, mongoVersionMinor, extra))
@@ -261,8 +264,13 @@ static orion::DBConnection mongoConnect
                   mongoVersionMayor,
                   mongoVersionMinor,
                   extra.c_str()));
+#endif
 
-  return orion::DBConnection(connection);
+  // FIXME OLD-DR: we are skiping a lot of code too deal with reaplica sets and errors. It return NULL on fail
+  // FIXME OLD-DR: unhardwire localhost
+  _connection = mongoc_client_new("mongodb://localhost:27017");
+
+  return orion::DBConnection(connection, _connection);
 }
 
 
