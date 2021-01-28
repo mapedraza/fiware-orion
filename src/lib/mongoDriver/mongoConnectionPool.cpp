@@ -26,6 +26,7 @@
 #include <semaphore.h>
 #include <string>
 #include <vector>
+#include <mongoc/mongoc.h>
 
 #include "logMsg/logMsg.h"
 #include "logMsg/traceLevels.h"
@@ -308,12 +309,17 @@ int orion::mongoConnectionPoolInit
   std::string statusString;
   if (dbSSL)
   {
+    // FIXME OLD-DR: auth not taken into account by the moment
+    // FIXME OLD-DR: if we call mongoc_init() then mongoc_cleanup() should be called.. someplace
+    mongoc_init();
     mongo::Status status = mongo::client::initialize(mongo::client::Options().setSSLMode(mongo::client::Options::kSSLRequired));
     statusOk = status.isOK();
     statusString = status.toString();
   }
   else
   {
+    // FIXME OLD-DR: if we call mongoc_init() then mongoc_cleanup() should be called.. someplace
+    mongoc_init();
     mongo::Status status = mongo::client::initialize();
     statusOk = status.isOK();
     statusString = status.toString();
