@@ -28,6 +28,8 @@
 
 #include "mongoDriver/BSONObj.h"
 
+#include "logMsg/logMsg.h"  // FIXME OLD-DR: remove after use
+
 namespace orion
 {
 /* ****************************************************************************
@@ -36,6 +38,33 @@ namespace orion
 */
 BSONObj::BSONObj()
 {
+  b = bson_new();
+  LM_I(("BSONObj empty constructor - bson_new %x %x", this, b));
+}
+
+
+
+/* ****************************************************************************
+*
+* BSONObj::BSONObj -
+*/
+BSONObj::BSONObj(const BSONObj& _bo)
+{
+  b = bson_copy(_bo.b);
+  bo = _bo.bo;
+  LM_I(("BSONObj constructor with BSON - bson_new %x %x", this, b));
+}
+
+
+
+/* ****************************************************************************
+*
+* BSONObj::~BSONObj -
+*/
+BSONObj::~BSONObj(void)
+{
+  LM_I(("BSONObj destructor - bson_destroy %x %x", this, b));
+  bson_destroy(b);
 }
 
 
@@ -126,6 +155,27 @@ void BSONObj::toElementsVector(std::vector<BSONElement>* v)
 
 
 
+/* ****************************************************************************
+*
+* BSONObj::operator= -
+*/
+BSONObj& BSONObj::operator= (BSONObj rhs)
+{
+  // check not self-assignment
+  if (this != &rhs)
+  {
+    // destroy existing b object, then copy rhs.b object
+    LM_I(("BSONOb operator = - bson_destroy %x %x", this, b));
+    bson_destroy(b);
+    b = bson_copy(rhs.b);
+
+    bo = rhs.bo;
+  }
+  return *this;
+}
+
+
+
 ///////// from now on, only methods with low-level driver types in return or parameters /////////
 
 
@@ -137,6 +187,8 @@ void BSONObj::toElementsVector(std::vector<BSONElement>* v)
 BSONObj::BSONObj(const mongo::BSONObj& _bo)
 {
   bo = _bo;
+  b = bson_new();
+  LM_I(("BSONObj constructor with mongo::BSONObj - bson_new %x %x", this, b));
 }
 
 
@@ -148,5 +200,16 @@ BSONObj::BSONObj(const mongo::BSONObj& _bo)
 mongo::BSONObj BSONObj::get(void) const
 {
   return bo;
+}
+
+
+
+/* ****************************************************************************
+*
+* BSONObj::_get -
+*/
+bson_t* BSONObj::_get(void) const
+{
+  return b;
 }
 }

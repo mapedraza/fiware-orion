@@ -27,6 +27,8 @@
 
 #include "mongoDriver/BSONArray.h"
 
+#include "logMsg/logMsg.h"  // FIXME OLD-DR: remove after use
+
 namespace orion
 {
 /* ****************************************************************************
@@ -34,7 +36,33 @@ namespace orion
 * BSONArray::BSONArray -
 */
 BSONArray::BSONArray()
+{  
+  b = bson_new();
+  LM_I(("BSONArray empty constructor - bson_new %x %x", this, b));
+}
+
+
+
+/* ****************************************************************************
+*
+* BSONArray::BSONArray -
+*/
+BSONArray::BSONArray(const BSONArray& _ba)
 {
+  LM_I(("BSONArray constructor BSONArray - bson_new %x %x", this, b));
+  b = bson_new();
+}
+
+
+
+/* ****************************************************************************
+*
+* BSONArray::~BSONArray -
+*/
+BSONArray::~BSONArray(void)
+{
+  LM_I(("BSONArray destructor - bson_destroy %x %x", this, b));
+  bson_destroy(b);
 }
 
 
@@ -61,6 +89,27 @@ std::string BSONArray::toString(void)
 
 
 
+/* ****************************************************************************
+*
+* BSONArray::operator= -
+*/
+BSONArray& BSONArray::operator= (BSONArray rhs)
+{
+  // check not self-assignment
+  if (this != &rhs)
+  {
+    // destroy existing b object, then copy rhs.b object
+    LM_I(("BSONArray operator = - bson_destroy %x %x", this, b));
+    bson_destroy(b);
+    b = bson_copy(rhs.b);
+
+    ba = rhs.ba;
+  }
+  return *this;
+}
+
+
+
 ///////// from now on, only methods with low-level driver types in return or parameters /////////
 
 
@@ -72,6 +121,8 @@ std::string BSONArray::toString(void)
 BSONArray::BSONArray(const mongo::BSONArray& _ba)
 {
   ba = _ba;
+  b = bson_new();
+  LM_I(("BSONArray constructor with mongo::BSONArray - bson_new %x %x", this, b));
 }
 
 
@@ -83,6 +134,16 @@ BSONArray::BSONArray(const mongo::BSONArray& _ba)
 mongo::BSONArray BSONArray::get(void) const
 {
   return ba;
+}
+
+
+/* ****************************************************************************
+*
+* BSONObj::_get -
+*/
+bson_t* BSONArray::_get(void) const
+{
+  return b;
 }
 }
 

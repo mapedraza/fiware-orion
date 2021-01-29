@@ -46,6 +46,7 @@ OID::OID()
 OID::OID(const std::string& id)
 {
   oid = mongo::OID(id);
+  bson_oid_init_from_string(&_oid, id.c_str());
 }
 
 
@@ -57,6 +58,7 @@ OID::OID(const std::string& id)
 void OID::init(void)
 {
   oid.init();
+  bson_oid_init(&_oid, NULL);
 }
 
 
@@ -86,13 +88,23 @@ mongo::OID OID::get(void) const
 }
 
 
+/* ****************************************************************************
+*
+* OID::_get -
+*/
+bson_oid_t OID::_get(void) const
+{
+  return _oid;
+}
+
+
 
 /* ****************************************************************************
 *
 * OID::OID -
 */
-OID::OID(const mongo::OID& _oid)
+OID::OID(const mongo::OID& _bo)
 {
-  oid = _oid;
+  oid = _bo;
 }
 }

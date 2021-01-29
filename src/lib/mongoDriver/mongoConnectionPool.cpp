@@ -264,9 +264,13 @@ static orion::DBConnection mongoConnect
                   mongoVersionMayor,
                   mongoVersionMinor,
                   extra.c_str()));
+#else
+  mongoVersionMayor = 4;
+  mongoVersionMinor = 2;
 #endif
 
   // FIXME OLD-DR: we are skiping a lot of code too deal with reaplica sets and errors. It return NULL on fail
+  // FIXME OLD-DR: mongoc_client_destroy() should be called some point
   // FIXME OLD-DR: unhardwire localhost
   _connection = mongoc_client_new("mongodb://localhost:27017");
 

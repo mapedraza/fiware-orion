@@ -50,6 +50,7 @@ class BSONDate
 
   // methods to be used only by mongoDriver/ code (with references to low-level driver code)
   mongo::Date_t get(void) const;
+  int64_t _get(void) const;
 };
 }
 

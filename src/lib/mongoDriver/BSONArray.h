@@ -27,6 +27,7 @@
 */
 
 #include <string>
+#include <bson/bson.h>
 
 #include "mongo/bson/bson.h"  // FIXME OLD-DR: change in next PoC stage
 
@@ -39,17 +40,22 @@ namespace orion
 class BSONArray
 {
  private:
-  mongo::BSONArray  ba;
+  mongo::BSONArray  ba;  // FIXME OLD-DR
+  bson_t*  b;
 
  public:
   // methods to be used by client code (without references to low-level driver code)
   BSONArray();
+  BSONArray(const BSONArray& _ba);
   int nFields(void) const;
   std::string toString(void);
+  BSONArray& operator= (BSONArray rhs);
 
   // methods to be used only by mongoDriver/ code (with references to low-level driver code)
   explicit BSONArray(const mongo::BSONArray& _ba);
+  ~BSONArray(void);
   mongo::BSONArray get(void) const;
+  bson_t* _get(void) const;
 };
 }
 

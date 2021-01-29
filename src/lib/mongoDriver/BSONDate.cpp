@@ -61,4 +61,16 @@ mongo::Date_t BSONDate::get(void) const
 {
   return date;
 }
+
+
+
+/* ****************************************************************************
+*
+* BSONDate::_get -
+*/
+int64_t BSONDate::_get(void) const
+{
+  // FIXME OLD-DR: unhardwire this
+  return 0;
+}
 }
