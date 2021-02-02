@@ -74,6 +74,7 @@ class BSONObj
   ~BSONObj(void);
   mongo::BSONObj get(void) const;
   bson_t* _get(void) const;
+  BSONObj(const mongo::BSONObj& _bo, bson_t* _b);
 };
 }
 

@@ -57,8 +57,8 @@ OID::OID(const std::string& id)
 */
 void OID::init(void)
 {
-  oid.init();
   bson_oid_init(&_oid, NULL);
+  oid.init(toString()); // FIXME OLD-DR: ugly, but it will be removed soon
 }
 
 
@@ -69,7 +69,9 @@ void OID::init(void)
 */
 std::string OID::toString(void)
 {
-  return oid.toString();
+  char str[25];  // OID fixed length is 24 chars
+  bson_oid_to_string(&_oid, str);
+  return std::string(str);
 }
 
 
@@ -106,5 +108,6 @@ bson_oid_t OID::_get(void) const
 OID::OID(const mongo::OID& _bo)
 {
   oid = _bo;
+  bson_oid_init_from_string(&_oid, oid.toString().c_str());
 }
 }

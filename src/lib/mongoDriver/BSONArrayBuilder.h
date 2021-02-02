@@ -43,6 +43,10 @@ class BSONArrayBuilder
 {
  private:
   mongo::BSONArrayBuilder  bab;
+  bson_t*     b;
+  uint32_t    i;        // elements in array counter
+  char        buf[16];  // for internal use in append methods. FIXME OLD-DR: unhardwire 16
+  const char* key;      // for internal use in append methods
 
  public:
   // methods to be used by client code (without references to low-level driver code)
@@ -57,9 +61,10 @@ class BSONArrayBuilder
   void append(bool value);
   void appendNull(void);
   void appendRegex(const std::string& value);
+  BSONArrayBuilder& operator= (BSONArrayBuilder rhs);
 
   // methods to be used only by mongoDriver/ code (with references to low-level driver code)
-  // (none so far)
+  ~BSONArrayBuilder(void);
 };
 }
 

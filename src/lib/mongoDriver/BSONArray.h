@@ -56,6 +56,7 @@ class BSONArray
   ~BSONArray(void);
   mongo::BSONArray get(void) const;
   bson_t* _get(void) const;
+  BSONArray(const mongo::BSONArray& _bo, bson_t* _b);
 };
 }
 

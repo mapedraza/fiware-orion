@@ -39,7 +39,7 @@ namespace orion
 BSONObj::BSONObj()
 {
   b = bson_new();
-  LM_I(("BSONObj empty constructor - bson_new %x %x", this, b));
+  //LM_I(("BSONObj empty constructor - bson_new %x %x", this, b));
 }
 
 
@@ -52,7 +52,7 @@ BSONObj::BSONObj(const BSONObj& _bo)
 {
   b = bson_copy(_bo.b);
   bo = _bo.bo;
-  LM_I(("BSONObj constructor with BSON - bson_new %x %x", this, b));
+  //LM_I(("BSONObj constructor with BSON - bson_new %x %x", this, b));
 }
 
 
@@ -63,7 +63,7 @@ BSONObj::BSONObj(const BSONObj& _bo)
 */
 BSONObj::~BSONObj(void)
 {
-  LM_I(("BSONObj destructor - bson_destroy %x %x", this, b));
+  //LM_I(("BSONObj destructor - bson_destroy %x %x", this, b));
   bson_destroy(b);
 }
 
@@ -158,6 +158,8 @@ void BSONObj::toElementsVector(std::vector<BSONElement>* v)
 /* ****************************************************************************
 *
 * BSONObj::operator= -
+*
+* FIXME OLD-DR: we should try to use const BSONObj& as argument
 */
 BSONObj& BSONObj::operator= (BSONObj rhs)
 {
@@ -165,7 +167,7 @@ BSONObj& BSONObj::operator= (BSONObj rhs)
   if (this != &rhs)
   {
     // destroy existing b object, then copy rhs.b object
-    LM_I(("BSONOb operator = - bson_destroy %x %x", this, b));
+    //LM_I(("BSONOb operator = - bson_destroy %x %x", this, b));
     bson_destroy(b);
     b = bson_copy(rhs.b);
 
@@ -188,7 +190,22 @@ BSONObj::BSONObj(const mongo::BSONObj& _bo)
 {
   bo = _bo;
   b = bson_new();
-  LM_I(("BSONObj constructor with mongo::BSONObj - bson_new %x %x", this, b));
+  //LM_I(("BSONObj constructor with mongo::BSONObj - bson_new %x %x", this, b));
+}
+
+
+
+/* ****************************************************************************
+*
+* BSONObj::BSONObj -
+*
+* FIXME OLD-DR: probably this is not needed at the end
+*/
+BSONObj::BSONObj(const mongo::BSONObj& _bo, bson_t* _b)
+{
+  bo = _bo;
+  b = bson_copy(_b);
+  //LM_I(("BSONObj constructor with mongo::BSONObj - bson_new %x %x", this, b));
 }
 
 

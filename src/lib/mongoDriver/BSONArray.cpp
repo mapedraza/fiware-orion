@@ -38,7 +38,7 @@ namespace orion
 BSONArray::BSONArray()
 {  
   b = bson_new();
-  LM_I(("BSONArray empty constructor - bson_new %x %x", this, b));
+  //LM_I(("BSONArray empty constructor - bson_new %x %x", this, b));
 }
 
 
@@ -49,7 +49,7 @@ BSONArray::BSONArray()
 */
 BSONArray::BSONArray(const BSONArray& _ba)
 {
-  LM_I(("BSONArray constructor BSONArray - bson_new %x %x", this, b));
+  //LM_I(("BSONArray constructor BSONArray - bson_new %x %x", this, b));
   b = bson_new();
 }
 
@@ -61,7 +61,7 @@ BSONArray::BSONArray(const BSONArray& _ba)
 */
 BSONArray::~BSONArray(void)
 {
-  LM_I(("BSONArray destructor - bson_destroy %x %x", this, b));
+  //LM_I(("BSONArray destructor - bson_destroy %x %x", this, b));
   bson_destroy(b);
 }
 
@@ -92,6 +92,8 @@ std::string BSONArray::toString(void)
 /* ****************************************************************************
 *
 * BSONArray::operator= -
+*
+* FIXME OLD-DR: we should try to use const BSONArray& as argument
 */
 BSONArray& BSONArray::operator= (BSONArray rhs)
 {
@@ -99,7 +101,7 @@ BSONArray& BSONArray::operator= (BSONArray rhs)
   if (this != &rhs)
   {
     // destroy existing b object, then copy rhs.b object
-    LM_I(("BSONArray operator = - bson_destroy %x %x", this, b));
+    //LM_I(("BSONArray operator = - bson_destroy %x %x", this, b));
     bson_destroy(b);
     b = bson_copy(rhs.b);
 
@@ -122,7 +124,22 @@ BSONArray::BSONArray(const mongo::BSONArray& _ba)
 {
   ba = _ba;
   b = bson_new();
-  LM_I(("BSONArray constructor with mongo::BSONArray - bson_new %x %x", this, b));
+  //LM_I(("BSONArray constructor with mongo::BSONArray - bson_new %x %x", this, b));
+}
+
+
+
+/* ****************************************************************************
+*
+* BSONArray::BSONArray -
+*
+* FIXME OLD-DR: probably this is not needed at the end
+*/
+BSONArray::BSONArray(const mongo::BSONArray& _ba, bson_t* _b)
+{
+  ba = _ba;
+  b = bson_copy(_b);
+  //LM_I(("BSONObj constructor with mongo::BSONObj - bson_new %x %x", this, b));
 }
 
 

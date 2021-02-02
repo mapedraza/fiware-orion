@@ -348,7 +348,7 @@ bool orion::collectionFindOne
 }
 
 
-
+#if 0
 /* ****************************************************************************
 *
 * orion::collectionInsert -
@@ -418,9 +418,87 @@ bool orion::collectionInsert
   alarmMgr.dbErrorReset();
   return true;
 }
+#endif
 
 
 
+/* ****************************************************************************
+*
+* orion::collectionInsert -
+*/
+bool orion::collectionInsert
+(
+  const std::string&     col,
+  const orion::BSONObj&  _doc,
+  std::string*           err
+)
+{
+  TIME_STAT_MONGO_WRITE_WAIT_START();
+
+  // FIXME OLD-DR: change function signature to have db and col separately and remove
+  // this tokenization logic
+  std::stringstream ss(col);
+  std::vector<std::string> tokens;
+  while(ss.good())
+  {
+    std::string substr;
+    getline(ss, substr, '.');
+    tokens.push_back(substr);
+  }
+
+  orion::DBConnection connection = orion::getMongoConnection();
+
+  // Getting the "low level" driver objects
+  const bson_t* doc = _doc._get();
+
+  if (connection.isNull())
+  {
+    TIME_STAT_MONGO_WRITE_WAIT_STOP();
+
+    LM_E(("Fatal Error (null DB connection)"));
+    *err = "null DB connection";
+
+    orion::releaseMongoConnection(connection);
+    return false;
+  }
+
+  char* bsonStr = bson_as_relaxed_extended_json(doc, NULL);
+
+  LM_T(LmtMongo, ("insert_one() in '%s' collection: '%s'", col.c_str(), bsonStr));
+
+  mongoc_collection_t *collection = mongoc_client_get_collection(connection._get(), tokens[0].c_str(), tokens[1].c_str());
+
+  bson_error_t error;
+  bson_t* opt = BCON_NEW("validate", BCON_BOOL(false));
+  bool success = mongoc_collection_insert_one(collection, doc, opt, NULL, &error);
+
+  bson_destroy(opt);
+  mongoc_collection_destroy(collection);
+  orion::releaseMongoConnection(connection);
+  TIME_STAT_MONGO_WRITE_WAIT_STOP();
+
+  if (success)
+  {
+    LM_T(LmtOldInfo, ("Database Operation Successful (insert: %s)", bsonStr));
+    alarmMgr.dbErrorReset();
+  }
+  else
+  {
+    std::string msg = std::string("collection: ") + col.c_str() +
+      " - insert_one(): " + bsonStr +
+      " - exception: " + error.message;
+
+    *err = "Database Error (" + msg + ")";
+    alarmMgr.dbError(msg);
+  }
+
+  bson_free(bsonStr);
+
+  return success;
+}
+
+
+#if 0
 /* ****************************************************************************
 *
 * orion::collectionUpdate -
@@ -497,9 +575,96 @@ bool orion::collectionUpdate
 
   return true;
 }
+#endif
 
 
 
+/* ****************************************************************************
+*
+* orion::collectionUpdate -
+*/
+bool orion::collectionUpdate
+(
+  const std::string&     col,
+  const orion::BSONObj&  _q,
+  const orion::BSONObj&  _doc,
+  bool                   upsert,
+  std::string*           err
+)
+{
+  TIME_STAT_MONGO_WRITE_WAIT_START();
+
+  // FIXME OLD-DR: change function signature to have db and col separately and remove
+  // this tokenization logic
+  std::stringstream ss(col);
+  std::vector<std::string> tokens;
+  while(ss.good())
+  {
+    std::string substr;
+    getline(ss, substr, '.');
+    tokens.push_back(substr);
+  }
+
+  orion::DBConnection connection = orion::getMongoConnection();
+
+  // Getting the "low level" driver objects
+  const bson_t* q   = _q._get();
+  const bson_t* doc = _doc._get();
+
+  if (connection.isNull())
+  {
+    TIME_STAT_MONGO_WRITE_WAIT_STOP();
+
+    LM_E(("Fatal Error (null DB connection)"));
+    *err = "null DB connection";
+
+    orion::releaseMongoConnection(connection);
+    return false;
+  }
+
+  char* bsonQStr   = bson_as_relaxed_extended_json(q, NULL);
+  char* bsonDocStr = bson_as_relaxed_extended_json(doc, NULL);
+
+  LM_T(LmtMongo, ("update() in '%s' collection: query='%s' doc='%s', upsert=%s",
+                  col.c_str(),
+                  bsonQStr,
+                  bsonDocStr,
+                  FT(upsert)));
+
+  mongoc_collection_t *collection = mongoc_client_get_collection(connection._get(), tokens[0].c_str(), tokens[1].c_str());
+
+  bson_error_t error;
+  bool success = mongoc_collection_update(collection,
+                                          upsert ? MONGOC_UPDATE_UPSERT : MONGOC_UPDATE_NONE,
+                                          q, doc, NULL, &error);
+
+  mongoc_collection_destroy(collection);
+  orion::releaseMongoConnection(connection);
+  TIME_STAT_MONGO_WRITE_WAIT_STOP();
+
+  if (success)
+  {
+    LM_T(LmtOldInfo, ("Database Operation Successful (update: <%s, %s>)", bsonQStr, bsonDocStr));
+    alarmMgr.dbErrorReset();
+  }
+  else
+  {
+    std::string msg = std::string("collection: ") + col.c_str() +
+      " - update(): <" + bsonQStr + "," + bsonDocStr + ">" +
+      " - exception: " + error.message;
+
+    *err = "Database Error (" + msg + ")";
+    alarmMgr.dbError(msg);
+  }
+
+  bson_free(bsonQStr);
+  bson_free(bsonDocStr);
+
+  return success;
+}
+
+
+#if 0
 /* ****************************************************************************
 *
 * orion::collectionRemove -
@@ -568,6 +733,82 @@ bool orion::collectionRemove
 
   alarmMgr.dbErrorReset();
   return true;
+}
+#endif
+
+
+
+/* ****************************************************************************
+*
+* orion::collectionRemove -
+*/
+bool orion::collectionRemove
+(
+  const std::string&     col,
+  const orion::BSONObj&  _q,
+  std::string*           err
+)
+{
+  TIME_STAT_MONGO_WRITE_WAIT_START();
+
+  // FIXME OLD-DR: change function signature to have db and col separately and remove
+  // this tokenization logic
+  std::stringstream ss(col);
+  std::vector<std::string> tokens;
+  while(ss.good())
+  {
+    std::string substr;
+    getline(ss, substr, '.');
+    tokens.push_back(substr);
+  }
+
+  orion::DBConnection connection = orion::getMongoConnection();
+
+  // Getting the "low level" driver objects
+  const bson_t* q = _q._get();
+
+  if (connection.isNull())
+  {
+    TIME_STAT_MONGO_WRITE_WAIT_STOP();
+
+    LM_E(("Fatal Error (null DB connection)"));
+    *err = "null DB connection";
+
+    orion::releaseMongoConnection(connection);
+    return false;
+  }
+
+  char* bsonStr = bson_as_relaxed_extended_json(q, NULL);
+
+  LM_T(LmtMongo, ("remove() in '%s' collection: {%s}", col.c_str(), bsonStr));
+
+  mongoc_collection_t *collection = mongoc_client_get_collection(connection._get(), tokens[0].c_str(), tokens[1].c_str());
+
+  bson_error_t error;
+  bool success = mongoc_collection_remove(collection, MONGOC_REMOVE_NONE, q, NULL, &error);
+
+  mongoc_collection_destroy(collection);
+  orion::releaseMongoConnection(connection);
+  TIME_STAT_MONGO_WRITE_WAIT_STOP();
+
+  if (success)
+  {
+    LM_T(LmtOldInfo, ("Database Operation Successful (remove: %s)", bsonStr));
+    alarmMgr.dbErrorReset();
+  }
+  else
+  {
+    std::string msg = std::string("collection: ") + col.c_str() +
+      " - remove(): " + bsonStr +
+      " - exception: " + error.message;
+
+    *err = "Database Error (" + msg + ")";
+    alarmMgr.dbError(msg);
+  }
+
+  bson_free(bsonStr);
+
+  return success;
 }
 
 

@@ -51,6 +51,7 @@ class DBConnection
   // methods to be used only by mongoDriver/ code (with references to low-level driver code)
   explicit DBConnection(mongo::DBClientBase* _dbcP, mongoc_client_t* ___dbcP);
   mongo::DBClientBase* get(void);
+  mongoc_client_t* _get(void);
 };
 }
 

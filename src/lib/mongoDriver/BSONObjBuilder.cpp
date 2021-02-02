@@ -29,6 +29,11 @@
 
 #include "logMsg/logMsg.h"  // FIXME OLD-DR: remove after use
 
+// FIXME OLD-DR: general comment. Do we really need builder vs. no-builder classes or
+// only just one family? What about using the bson_append_document_begin() and
+// bson_append_document_end() methods (maybe performance is
+// better: http://mongoc.org/libbson/current/bson_append_array_begin.html#description)?
+
 namespace orion
 {
 /* ****************************************************************************
@@ -38,7 +43,7 @@ namespace orion
 BSONObjBuilder::BSONObjBuilder(void)
 {
   b = bson_new();
-  LM_I(("BSONObjBuilder empty constructor - bson_new %x %x", this, b));
+  //LM_I(("BSONObjBuilder empty constructor - bson_new %x %x", this, b));
 }
 
 
@@ -49,7 +54,7 @@ BSONObjBuilder::BSONObjBuilder(void)
 */
 BSONObjBuilder::~BSONObjBuilder(void)
 {
-  LM_I(("BSONObjBuilder desructor - bson_destroy %x %x", this, b));
+  //LM_I(("BSONObjBuilder destructor - bson_destroy %x %x", this, b));
   bson_destroy(b);
 }
 
@@ -61,7 +66,7 @@ BSONObjBuilder::~BSONObjBuilder(void)
 */
 BSONObj BSONObjBuilder::obj(void)
 {
-  return BSONObj(bob.obj());
+  return BSONObj(bob.obj(), b);
 }
 
 
@@ -246,6 +251,8 @@ void BSONObjBuilder::appendElements(orion::BSONObj b)
 /* ****************************************************************************
 *
 * BSONObjBuilder::operator= -
+*
+* FIXME OLD-DR: we should try to use const BSONObjBuilder& as argument
 */
 BSONObjBuilder& BSONObjBuilder::operator= (BSONObjBuilder rhs)
 {
@@ -253,7 +260,7 @@ BSONObjBuilder& BSONObjBuilder::operator= (BSONObjBuilder rhs)
   if (this != &rhs)
   {
     // destroy existing b object, then copy rhs.b object
-    LM_I(("BSONObjBuilder desructor - bson_destroy %x %x", this, b));
+    //LM_I(("BSONObjBuilder operator= - bson_destroy %x %x", this, b));
     bson_destroy(b);
     b = bson_copy(rhs.b);
 

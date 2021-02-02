@@ -85,4 +85,15 @@ mongo::DBClientBase* DBConnection::get(void)
 {
   return dbcP;
 }
+
+
+/* ****************************************************************************
+*
+* DBConnection::_get -
+*/
+
+mongoc_client_t* DBConnection::_get(void)
+{
+  return __dbcP;
+}
 }
