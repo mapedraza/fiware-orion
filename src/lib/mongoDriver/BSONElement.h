@@ -28,6 +28,7 @@
 
 #include <string>
 #include <vector>
+#include <bson/bson.h>
 
 #include "mongo/bson/bson.h"  // FIXME OLD-DR: change in next PoC stage
 
@@ -47,7 +48,9 @@ class BSONObj;
 class BSONElement
 {
  private:
-  mongo::BSONElement  be;
+  mongo::BSONElement  be; // FIXME OLD-DR: remove
+  std::string         field;
+  bson_value_t        bv;
 
  public:
   // methods to be used by client code (without references to low-level driver code)
@@ -64,6 +67,20 @@ class BSONElement
   std::string fieldName(void) const;
   std::string str() const;
   bool eoo(void) const;
+
+  // FIXME OLD-DR: driver C familiy
+  BSONType _type(void) const;
+  bool _isNull(void);
+  std::string _OID(void);
+  std::string _String(void) const;
+  bool __Bool(void) const;
+  double _Number(void) const;
+  std::vector<BSONElement> _Array(void) const;
+  BSONObj _embeddedObject(void) const;
+  BSONDate _date(void);
+  std::string _fieldName(void) const;
+  std::string _str() const;
+  bool _eoo(void) const;
 
   // methods to be used only by mongoDriver/ code (with references to low-level driver code)
   explicit BSONElement(const mongo::BSONElement& _bo);

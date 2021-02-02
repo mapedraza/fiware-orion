@@ -32,6 +32,8 @@
 
 #include "mongoDriver/safeMongo.h"
 
+#include "mongoDriver/BSONObjBuilder.h" // FIXME OLD-DR: maybe remove
+
 
 /* ****************************************************************************
 *
@@ -85,7 +87,11 @@ orion::BSONObj orion::getObjectField
 
   if (b.hasField(field) && b.getField(field).type() == mongo::Object)
   {
+    // FIXME OLD-DR: try to make this as simpler as previous implemetnation, without using BSONObjBUilder
     return orion::BSONObj(b.getObjectField(field));
+    /*orion::BSONObjBuilder bob;
+    bob.appendElements(b.getObjectField(field));
+    return bob.obj();*/
   }
 
   // Detect error

@@ -64,6 +64,7 @@ class BSONObj
   bool hasField(const std::string& field) const;
   int nFields(void) const;
   std::string toString(void) const;
+  std::string _toString(void) const;
   bool isEmpty(void);
   void toStringMap(std::map<std::string, std::string>* m);
   void toElementsVector(std::vector<BSONElement>* v);
@@ -75,6 +76,7 @@ class BSONObj
   mongo::BSONObj get(void) const;
   bson_t* _get(void) const;
   BSONObj(const mongo::BSONObj& _bo, bson_t* _b);
+  BSONObj(bson_t* _b);
 };
 }
 

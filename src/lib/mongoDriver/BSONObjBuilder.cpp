@@ -269,4 +269,56 @@ BSONObjBuilder& BSONObjBuilder::operator= (BSONObjBuilder rhs)
   }
   return *this;
 }
+
+
+
+#if 0
+/* ****************************************************************************
+*
+* BSONObjBuilder::appendElements -
+*/
+void BSONObjBuilder::appendElements(mongo::BSONObj _b)
+{
+  bob.appendElements(_b.get());
+
+  // FIXME OLD-DR: this code would be removed, as mongo::BSONElmement will not
+  // be used at the end
+  std::set<std::string> fields;
+  _b.getFieldNames(&fields);
+  for (std::set<std::string>::iterator i = fields.begin(); i != fields.end(); ++i)
+  {
+    mongo::BSONElement be = _b.getField(*i);
+
+    switch (be.type())
+    {
+    case mongo::NumberDouble:  append(b, *i, be.numberDouble()); break;
+    case mongo::String:        append(*i, be.String()); break;
+    case mongo::Object:        append(*i, be.Obj()); break;
+    case mongo::Array:         append(*i, be.Array()); break;
+    case mongo::Bool:          append(*i, be.Bool()); break;
+    case mongo::Date:          appendDate(*i, be.date()); break;
+    case mongo::RegEx:         append(*i, ); break;
+    case mongo::NumberInt:     append(*i, ); break;
+    case mongo::NumberLong:    append(*i, ); break;
+    }
+
+/*
+  void append(const std::string& key, const std::string& value);
+  void append(const std::string& key, const char* value);
+  void append(const std::string& key, int value);
+  void append(const std::string& key, long long value);
+  void append(const std::string& key, double value);
+  void append(const std::string& key, bool value);
+  void append(const std::string& key, const orion::OID& value);
+  void append(const std::string& key, const BSONObj& value);
+  void append(const std::string& key, const BSONArray& value);
+  void appendCode(const std::string& key, const std::string& value);
+  void appendRegex(const std::string& key, const std::string& value);
+  void appendDate(const std::string& key, const BSONDate& value);
+  void appendNull(const std::string& key);
+  */
+
+  }
+#endif
+
 }

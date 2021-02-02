@@ -70,6 +70,7 @@ class BSONObjBuilder
 
   // methods to be used only by mongoDriver/ code (with references to low-level driver code)
   ~BSONObjBuilder(void);
+  //void appendElements(mongo::BSONObj b);
 };
 }
 

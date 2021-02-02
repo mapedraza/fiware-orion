@@ -203,7 +203,194 @@ bool BSONElement::eoo(void) const
   return be.eoo();
 }
 
+// FIXME OLD-DR: drive C family
 
+/* ****************************************************************************
+*
+* BSONElement::_type -
+*
+*/
+BSONType BSONElement::_type(void) const
+{
+  switch (bv.value_type)
+  {
+  case BSON_TYPE_EOD:        return orion::EOO;
+  case BSON_TYPE_DOUBLE:     return orion::NumberDouble;
+  case BSON_TYPE_UTF8:       return orion::String;
+  case BSON_TYPE_DOCUMENT:   return orion::Object;
+  case BSON_TYPE_ARRAY:      return orion::Array;
+  case BSON_TYPE_BINARY:     return orion::BinData;
+  case BSON_TYPE_UNDEFINED:  return orion::Undefined;
+  case BSON_TYPE_OID:        return orion::jstOID;
+  case BSON_TYPE_BOOL:       return orion::Bool;
+  case BSON_TYPE_DATE_TIME:  return orion::Date;
+  case BSON_TYPE_NULL:       return orion::jstNULL;
+  case BSON_TYPE_REGEX:      return orion::RegEx;
+  case BSON_TYPE_DBPOINTER:  return orion::DBRef;
+  case BSON_TYPE_CODE:       return orion::Code;
+  case BSON_TYPE_SYMBOL:     return orion::Symbol;
+  case BSON_TYPE_CODEWSCOPE: return orion::CodeWScope;
+  case BSON_TYPE_INT32:      return orion::NumberInt;
+  case BSON_TYPE_TIMESTAMP:  return orion::Timestamp;
+  case BSON_TYPE_INT64:      return orion::NumberLong;
+  case BSON_TYPE_DECIMAL128: return orion::BigDecimal;
+  case BSON_TYPE_MAXKEY:     return orion::MaxKey;
+  case BSON_TYPE_MINKEY:     return orion::MinKey;
+  }
+
+  // FIXME: maybe we should return some other thing...
+  return orion::EOO;
+}
+
+// FIXME OLD-DR: type check should be enformed in Double(), String(), eg:
+//
+// value = bson_iter_value (&iter);
+//
+//if (value->value_type == BSON_TYPE_INT32) {
+//   printf ("%d\n", value->value.v_int32);
+//}
+
+
+/* ****************************************************************************
+*
+* BSONElement::_isNull -
+*/
+bool BSONElement::_isNull(void)
+{
+  // FIXME OLD-DR: who calls this method?
+  return (bv.value_type == BSON_TYPE_NULL);
+}
+
+
+
+/* ****************************************************************************
+*
+* BSONElement::_OID -
+*/
+std::string BSONElement::_OID(void)
+{
+  char str[25];  // OID fixed length is 24 chars
+  bson_oid_to_string(&bv.value.v_oid, str);
+  return std::string(str);
+}
+
+
+
+/* ****************************************************************************
+*
+* BSONElement::_String -
+*/
+std::string BSONElement::_String(void) const
+{
+  return std::string(bv.value.v_utf8.str);
+}
+
+
+
+/* ****************************************************************************
+*
+* BSONElement::_Bool -
+*/
+bool BSONElement::__Bool(void) const
+{
+  return bv.value.v_bool;
+}
+
+
+/* ****************************************************************************
+*
+* BSONElement::_Number -
+*/
+double BSONElement::_Number(void) const
+{
+  return bv.value.v_double;
+}
+
+
+
+/* ****************************************************************************
+*
+* BSONElement::_Array -
+*/
+std::vector<BSONElement> BSONElement::_Array(void) const
+{
+  std::vector<BSONElement> v;
+
+  std::vector<mongo::BSONElement> bea = be.Array();
+  for (unsigned int ix = 0; ix < bea.size(); ++ix)
+  {
+    v.push_back(BSONElement(bea[ix]));
+  }
+  return v;
+}
+
+
+
+/* ****************************************************************************
+*
+* BSONElement::_embeddedObject -
+*/
+BSONObj BSONElement::_embeddedObject(void) const
+{
+  size_t len    = (size_t) bv.value.v_doc.data_len;
+  uint8_t* data = bv.value.v_doc.data;
+
+  bson_t* b = bson_new_from_buffer(&data, &len, NULL, NULL);
+
+  BSONObj bo(b);
+
+  bson_destroy(b);
+
+  return bo;
+}
+
+
+
+/* ****************************************************************************
+*
+* BSONElement::_date -
+*/
+BSONDate BSONElement::_date(void)
+{
+  // FIXME OLD-DR: pending
+  //return BSONDate(be.date());
+  return BSONDate(0);
+}
+
+
+
+/* ****************************************************************************
+*
+* BSONElement::_fieldName -
+*/
+std::string BSONElement::_fieldName(void) const
+{
+  return field;
+}
+
+
+
+/* ****************************************************************************
+*
+* BSONElement::_str -
+*/
+std::string BSONElement::_str() const
+{
+  // FIXME OLD-DR: probably this method can be removed. It's redundant. Who calls it?
+  return String();
+}
+
+
+
+/* ****************************************************************************
+*
+* BSONElement::_eoo -
+*/
+bool BSONElement::_eoo(void) const
+{
+  // FIXME OLD-DR: who calls this method?
+  return (bv.value_type == BSON_TYPE_NULL);
+}
 
 ///////// from now on, only methods with low-level driver types in return or parameters /////////
 

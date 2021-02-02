@@ -115,6 +115,19 @@ std::string BSONObj::toString(void) const
 
 /* ****************************************************************************
 *
+* BSONObj::toString -
+*/
+std::string BSONObj::_toString(void) const
+{
+  char* str = bson_as_relaxed_extended_json(b, NULL);
+  std::string s(str);
+  bson_free(str);
+  return s;
+}
+
+
+/* ****************************************************************************
+*
 * BSONObj::isEmpty -
 */
 bool BSONObj::isEmpty(void)
@@ -206,6 +219,18 @@ BSONObj::BSONObj(const mongo::BSONObj& _bo, bson_t* _b)
   bo = _bo;
   b = bson_copy(_b);
   //LM_I(("BSONObj constructor with mongo::BSONObj - bson_new %x %x", this, b));
+}
+
+
+
+/* ****************************************************************************
+*
+* BSONObj::BSONObj -
+*
+*/
+BSONObj::BSONObj(bson_t* _b)
+{
+  b = bson_copy(_b);
 }
 
 
