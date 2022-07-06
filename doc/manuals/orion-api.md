@@ -1829,6 +1829,7 @@ A `subject` contains the following subfields:
 		<td>string</td>
 		<td>A list of objects, each one composed of the following subfields:
       <table>
+	<tbody>
         <tr>
           <th><code>id</code> or <code>idPattern</code></th>
           <th>Id or pattern of the affected entities. Both cannot be used at the same time, but one of them must be present.</th>
@@ -1838,6 +1839,7 @@ A `subject` contains the following subfields:
           <th>Type or type pattern of the affected entities. Both cannot be used at
      the same time. If omitted, it means "any entity type".</th>          
         </tr>
+      </tbody>
       </table>
     </td>
 	</tr>
@@ -1847,7 +1849,7 @@ A `subject` contains the following subfields:
 		<td></td>
 		<td>string</td>
 		<td>Condition to trigger notifications. This field is optional and it may contain two properties, both optional:
-      <table>
+      <table><tbody>
         <tr>
           <th><code>attrs</code></th>
           <th>Array of attribute names that will trigger the notification.</th>
@@ -1858,7 +1860,54 @@ A `subject` contains the following subfields:
           <code>geometry</code> and <code>coords</code> (see "List entities" operation above about 
           this field)</th>          
         </tr>
-      </table>
+      </tbody></table>
+    </td>
+	</tr>
+</tbody>
+</table>
+
+
+| Parameter      | Optional | Type   | Description                                                                                   |
+|----------------|----------|--------|-----------------------------------------------------------------------------------------------|
+| `entities`     |          | string | A list of objects, each one composed of the following subfields: <ul><li><code>id</code> or <code>idPattern</code> Id or pattern of the affected entities. Both cannot be used at the same time, but one of them must be present.</li> <li><code>type</code> or <code>typePattern</code> Type or type pattern of the affected entities. Both cannot be used at the same time. If omitted, it means "any entity type".</li></ul> |
+| `condition`    |          | string | Condition to trigger notifications. This field is optional and it may contain two properties, both optional: <ul><li><code>attrs</code> Array of attribute names that will trigger the notification. </li> <li><code>expression</code> An expression composed of <code>q</code>, <code>mq</code>, <code>georel</code>, <code>geometry</code> and <code>coords</code> (see "List entities" operation above about this field)</li></ul> |
+
+
+
+<table>
+<thead>
+	<tr>
+		<th>Parameter</th>
+		<th>Optional</th>
+		<th>Type</th>
+		<th>Description</th>
+	</tr>
+</thead>
+<tbody>
+  <!-- entities -->
+	<tr>
+		<td><code>entities</code></td>
+		<td></td>
+		<td>string</td>
+		<td>A list of objects, each one composed of the following subfields:
+      <ul>
+          <li><code>id</code> or <code>idPattern</code> Id or pattern of the affected entities. Both cannot be used at the same time, but one of them must be present.</li>
+          <li><code>type</code> or <code>typePattern</code> Type or type pattern of the affected entities. Both cannot be used at the same time. If omitted, it means "any entity type".</li>          
+      </ul>
+    </td>
+	</tr>
+  <!-- condition -->
+  <tr>
+		<td><code>condition</code></td>
+		<td></td>
+		<td>string</td>
+		<td>Condition to trigger notifications. This field is optional and it may contain two properties, both optional:
+      <ul>
+          <li><code>attrs</code> Array of attribute names that will trigger the notification.</li>
+          <li><code>expression</code> An expression composed of <code>q</code>, <code>mq</code>, <code>georel</code>, 
+          <code>geometry</code> and <code>coords</code> (see "List entities" operation above about 
+          this field)</li>          
+      </ul>
     </td>
 	</tr>
 </tbody>
