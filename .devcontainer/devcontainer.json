@@ -1,0 +1,44 @@
+{
+    "name": "Orion c++ Dev Container",
+    // "build": {
+    //     "dockerfile": "Dockerfile",
+    //     "args": { 
+    //         "VARIANT": "buster" 
+    //     }
+    // },
+
+	
+	// Update the 'dockerComposeFile' list if you have more compose files or use different names.
+	"dockerComposeFile": "docker-compose.yml",
+
+	// The 'service' property is the name of the service for the container that VS Code should
+	// use. Update this value and .devcontainer/docker-compose.yml to the real service name.
+	"service": "app",
+
+	// The 'workspaceFolder' property is the path VS Code should open by default when
+	// connected. Corresponds to a volume mount in .devcontainer/docker-compose.yml
+	"workspaceFolder": "/opt/fiware-orion",
+    
+	// Configure tool-specific properties.
+	"customizations": {
+		// Configure properties specific to VS Code.
+		"vscode": {
+			"settings": {},
+			"extensions": [
+                "ms-vscode.cpptools",
+                "ms-vscode.cmake-tools"
+			]
+		}
+	},
+
+    "runArgs": [ "--platform linux/amd64"]
+    // Use 'forwardPorts' to make a list of ports inside the container available locally.
+	// "forwardPorts": [],
+
+	// Use 'postCreateCommand' to run commands after the container is created.
+	//"postCreateCommand": "/bin/sh /opt/bin/build.sh" 
+
+	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
+	// "remoteUser": "root"
+
+}

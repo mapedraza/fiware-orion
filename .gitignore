@@ -2,6 +2,7 @@
 *~
 *.bak
 .*
+!.devcontainer
 !.travis.yml
 !.github
 *.autosave
