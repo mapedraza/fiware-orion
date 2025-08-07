@@ -236,7 +236,6 @@ if (HAVE_CJEXL)
     message("Using cjexl")
     SET (COMMON_STATIC_LIBS
         microhttpd.a
-        mosquitto.a
         ${HAVE_CJEXL}
         mongo::mongoc_static
     )
@@ -245,7 +244,6 @@ else (HAVE_CJEXL)
     add_definitions(-DEXPR_BASIC)
     SET (COMMON_STATIC_LIBS
         microhttpd.a
-        mosquitto.a
         mongo::mongoc_static
     )
 endif (HAVE_CJEXL)
@@ -262,6 +260,7 @@ SET (DYNAMIC_LIBS
     uuid
     crypto
     sasl2
+    mosquitto
 )
 
 #
