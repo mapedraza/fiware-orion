@@ -182,10 +182,9 @@
             "description": "Limits the number of entities to be retrieved",
             "schema": {
               "type": "integer",
-              "minimum": 1,
-              "maximum": 1000,
-              "default": 20
-            }
+              "minimum": 1
+            },
+            "example": 20
           },
           {
             "name": "offset",
@@ -193,9 +192,9 @@
             "description": "Establishes the offset from where entities are retrieved",
             "schema": {
               "type": "integer",
-              "minimum": 0,
-              "default": 0
-            }
+              "minimum": 0
+            },
+            "example": 100
           },
           {
             "name": "attrs",
@@ -252,7 +251,22 @@
                   "items": {
                     "$ref": "#/components/schemas/Entity"
                   }
-                }
+                },
+                "example": [
+                  {
+                    "id": "DC_S1-D41",
+                    "type": "Room",
+                    "temperature": {
+                      "value": 35.6,
+                      "type": "Number",
+                      "metadata": {}
+                    },
+                    "timestamp": {
+                      "value": "2015-06-04T07:20:27.378Z",
+                      "type": "DateTime"
+                    }
+                  }
+                ]
               }
             }
           },
@@ -279,13 +293,11 @@
           {
             "name": "options",
             "in": "query",
-            "description": "Creation options (upsert for update if exists)",
+            "description": "A comma-separated list of options for the query. Valid options: keyValues, upsert\n",
             "schema": {
-              "type": "string",
-              "enum": [
-                "upsert"
-              ]
-            }
+              "type": "string"
+            },
+            "example": "upsert"
           }
         ],
         "requestBody": {
@@ -395,6 +407,34 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Entity"
+                },
+                "example": {
+                  "type": "Room",
+                  "id": "Bcn_Welt",
+                  "temperature": {
+                    "value": 21.7,
+                    "type": "Number"
+                  },
+                  "humidity": {
+                    "value": 60,
+                    "type": "Number"
+                  },
+                  "location": {
+                    "value": {
+                      "type": "Point",
+                      "coordinates": [
+                        2.1864475,
+                        41.3763726
+                      ]
+                    },
+                    "type": "geo:json",
+                    "metadata": {
+                      "crs": {
+                        "value": "WGS84",
+                        "type": "Text"
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -1566,6 +1606,46 @@
         "tags": [
           "Batch Operations"
         ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Limit the number of entities to be retrieved",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "example": 10
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "Skip a number of entities",
+            "schema": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "example": 100
+          },
+          {
+            "name": "orderBy",
+            "in": "query",
+            "description": "Criteria for ordering results",
+            "schema": {
+              "type": "string"
+            },
+            "example": "temperature,!speed"
+          },
+          {
+            "name": "options",
+            "in": "query",
+            "description": "A comma-separated list of options. Valid options: count, keyValues, values, unique, skipForwarding\n",
+            "schema": {
+              "type": "string"
+            },
+            "example": "count"
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -1610,6 +1690,17 @@
         "operationId": "batchUpdate",
         "tags": [
           "Batch Operations"
+        ],
+        "parameters": [
+          {
+            "name": "options",
+            "in": "query",
+            "description": "A comma-separated list of options. Valid options: keyValues, overrideMetadata, forcedUpdate, flowControl\n",
+            "schema": {
+              "type": "string"
+            },
+            "example": "keyValues"
+          }
         ],
         "requestBody": {
           "required": true,
@@ -1773,15 +1864,29 @@
           "$ref": "#/components/schemas/Attribute"
         },
         "example": {
-          "id": "Room1",
+          "id": "Bcn_Welt",
           "type": "Room",
           "temperature": {
-            "type": "Number",
-            "value": 23.5,
+            "value": 21.7,
+            "type": "Number"
+          },
+          "humidity": {
+            "value": 60,
+            "type": "Number"
+          },
+          "location": {
+            "value": {
+              "type": "Point",
+              "coordinates": [
+                2.1864475,
+                41.3763726
+              ]
+            },
+            "type": "geo:json",
             "metadata": {
-              "accuracy": {
-                "type": "Number",
-                "value": 0.1
+              "crs": {
+                "value": "WGS84",
+                "type": "Text"
               }
             }
           }
@@ -1804,20 +1909,32 @@
           }
         },
         "additionalProperties": {
-          "oneOf": [
-            {
-              "$ref": "#/components/schemas/Attribute"
+          "$ref": "#/components/schemas/AttributeRequest"
+        },
+        "example": {
+          "type": "Room",
+          "id": "Bcn-Welt",
+          "temperature": {
+            "value": 21.7
+          },
+          "humidity": {
+            "value": 60
+          },
+          "location": {
+            "value": {
+              "type": "Point",
+              "coordinates": [
+                2.1864475,
+                41.3763726
+              ]
             },
-            {
-              "type": "string"
-            },
-            {
-              "type": "number"
-            },
-            {
-              "type": "boolean"
+            "type": "geo:json",
+            "metadata": {
+              "crs": {
+                "value": "WGS84"
+              }
             }
-          ]
+          }
         }
       },
       "Attribute": {
@@ -1825,7 +1942,7 @@
         "properties": {
           "type": {
             "type": "string",
-            "description": "Attribute type"
+            "description": "Attribute NGSI type (always present in responses)"
           },
           "value": {
             "description": "Attribute value",
@@ -1844,49 +1961,152 @@
               },
               {
                 "type": "array"
+              },
+              {
+                "type": "null"
               }
             ]
           },
           "metadata": {
             "type": "object",
             "additionalProperties": {
-              "type": "object",
-              "properties": {
-                "type": {
-                  "type": "string"
-                },
-                "value": {
-                  "oneOf": [
-                    {
-                      "type": "string"
-                    },
-                    {
-                      "type": "number"
-                    },
-                    {
-                      "type": "boolean"
-                    },
-                    {
-                      "type": "object"
-                    },
-                    {
-                      "type": "array"
-                    }
-                  ]
-                }
+              "$ref": "#/components/schemas/Metadata"
+            },
+            "description": "Attribute metadata (empty object {} if no metadata)"
+          }
+        },
+        "required": [
+          "value",
+          "type"
+        ],
+        "example": {
+          "value": 21.7,
+          "type": "Number"
+        }
+      },
+      "AttributeRequest": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Attribute NGSI type (optional in requests). When omitted, defaults based on value:\n- String value \u2192 \"Text\"\n- Number value \u2192 \"Number\" \n- Boolean value \u2192 \"Boolean\"\n- Object/Array value \u2192 \"StructuredValue\"\n- Null value \u2192 \"None\"\n"
+          },
+          "value": {
+            "description": "Attribute value (may be omitted, meaning null value)",
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "object"
+              },
+              {
+                "type": "array"
+              },
+              {
+                "type": "null"
               }
-            }
+            ]
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/MetadataRequest"
+            },
+            "description": "Attribute metadata (may be omitted, meaning no metadata)"
           }
         },
         "example": {
+          "value": 21.7,
           "type": "Number",
-          "value": 23.5,
           "metadata": {
             "accuracy": {
-              "type": "Number",
-              "value": 0.1
+              "value": 0.1,
+              "type": "Number"
             }
           }
+        }
+      },
+      "Metadata": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Metadata NGSI type (always present in responses)"
+          },
+          "value": {
+            "description": "Metadata value",
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "object"
+              },
+              {
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "value",
+          "type"
+        ],
+        "example": {
+          "value": "WGS84",
+          "type": "Text"
+        }
+      },
+      "MetadataRequest": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Metadata NGSI type (optional in requests). When omitted, defaults based on value:\n- String value \u2192 \"Text\"\n- Number value \u2192 \"Number\"\n- Boolean value \u2192 \"Boolean\" \n- Object/Array value \u2192 \"StructuredValue\"\n- Null value \u2192 \"None\"\n"
+          },
+          "value": {
+            "description": "Metadata value (may be omitted, meaning null value)",
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "object"
+              },
+              {
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "example": {
+          "value": "WGS84",
+          "type": "Text"
         }
       },
       "EntityType": {
@@ -2204,6 +2424,35 @@
           "throttling": {
             "type": "number"
           }
+        },
+        "example": {
+          "description": "One subscription to rule them all",
+          "subject": {
+            "entities": [
+              {
+                "idPattern": ".*",
+                "type": "Room"
+              }
+            ],
+            "condition": {
+              "attrs": [
+                "temperature"
+              ],
+              "expression": {
+                "q": "temperature>40"
+              }
+            }
+          },
+          "notification": {
+            "http": {
+              "url": "http://localhost:1234"
+            },
+            "attrs": [
+              "temperature",
+              "humidity"
+            ]
+          },
+          "expires": "2025-04-05T14:00:00.00Z"
         }
       },
       "SubscriptionUpdate": {
@@ -2476,14 +2725,39 @@
             "type": "array",
             "items": {
               "type": "string"
-            }
+            },
+            "description": "List of metadata names to include in the response"
           },
           "orderBy": {
             "type": "array",
             "items": {
               "type": "string"
-            }
+            },
+            "description": "Criteria for ordering results"
           }
+        },
+        "example": {
+          "entities": [
+            {
+              "idPattern": ".*",
+              "type": "Room"
+            },
+            {
+              "id": "Car",
+              "type": "P-9873-K"
+            }
+          ],
+          "attrs": [
+            "temperature",
+            "humidity"
+          ],
+          "expression": {
+            "q": "temperature>20"
+          },
+          "metadata": [
+            "accuracy",
+            "timestamp"
+          ]
         }
       },
       "BatchUpdateRequest": {
@@ -2501,14 +2775,41 @@
               "update",
               "delete",
               "replace"
-            ]
+            ],
+            "description": "Kind of update action to perform:\n- append: Create entity if it doesn't exist, or append attributes if it does\n- appendStrict: Like append, but fails if attribute already exists\n- update: Update existing attributes (entity must exist)\n- delete: Delete attributes or entire entity\n- replace: Replace all attributes of existing entities\n"
           },
           "entities": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/Entity"
-            }
+              "$ref": "#/components/schemas/EntityCreation"
+            },
+            "description": "Array of entities to be updated"
           }
+        },
+        "example": {
+          "actionType": "append",
+          "entities": [
+            {
+              "type": "Room",
+              "id": "Bcn-Welt",
+              "temperature": {
+                "value": 21.7
+              },
+              "humidity": {
+                "value": 60
+              }
+            },
+            {
+              "type": "Room",
+              "id": "Mad_Aud",
+              "temperature": {
+                "value": 22.9
+              },
+              "humidity": {
+                "value": 85
+              }
+            }
+          ]
         }
       },
       "NotificationRequest": {
