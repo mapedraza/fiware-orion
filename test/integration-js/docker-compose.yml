@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  # MongoDB database for Orion
+  mongo:
+    image: mongo:4.4
+    hostname: mongo
+    container_name: orion-mongo
+    ports:
+      - "27017:27017"
+    command: --nojournal
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # FIWARE Orion Context Broker
+  orion:
+    image: fiware/orion:latest
+    hostname: orion
+    container_name: fiware-orion
+    depends_on:
+      mongo:
+        condition: service_healthy
+    ports:
+      - "1026:1026"
+    command: -dbhost mongo -logLevel DEBUG
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:1026/version"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    environment:
+      - ORION_LOG_LEVEL=DEBUG
+
+volumes:
+  mongo-data:
+
+# Usage:
+# docker-compose up -d        # Start Orion in background
+# docker-compose down         # Stop and remove containers
+# docker-compose logs orion   # View Orion logs
+# docker-compose logs mongo   # View MongoDB logs

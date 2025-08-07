@@ -1,0 +1,1957 @@
+openapi: 3.0.3
+info:
+  title: FIWARE Orion Context Broker API
+  description: |
+    This is the specification of the FIWARE Orion Context Broker API.
+    
+    The FIWARE Orion Context Broker is an implementation of the NGSI (Next Generation Service Interface)
+    standard developed by the Open Mobile Alliance (OMA). It allows you to manage context information
+    in a highly decentralized and large-scale manner.
+    
+    The Context Broker provides the NGSI v2 API to manage context information including creating,
+    updating, querying and subscribing to changes in entities and their attributes.
+  version: "4.1.0"
+  contact:
+    name: FIWARE Orion Team
+    url: https://github.com/telefonicaid/fiware-orion
+    email: fiware-orion@lists.fiware.org
+  license:
+    name: AGPL-3.0
+    url: https://www.gnu.org/licenses/agpl-3.0.html
+externalDocs:
+  description: Full Orion API Documentation
+  url: https://fiware-orion.readthedocs.io/
+servers:
+  - url: http://localhost:1026
+    description: Local development server
+  - url: https://orion.lab.fiware.org
+    description: FIWARE Lab
+paths:
+  /v2:
+    get:
+      summary: Retrieve API entry points
+      description: Lists the API entry points available in the API
+      operationId: getApiEntryPoints
+      tags:
+        - API Entry Points
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  entities_url:
+                    type: string
+                    format: uri
+                    example: "/v2/entities"
+                  types_url:
+                    type: string
+                    format: uri
+                    example: "/v2/types"
+                  subscriptions_url:
+                    type: string
+                    format: uri
+                    example: "/v2/subscriptions"
+                  registrations_url:
+                    type: string
+                    format: uri
+                    example: "/v2/registrations"
+
+  /v2/entities:
+    get:
+      summary: List entities
+      description: |
+        Retrieves an array of entities that match different criteria by id, type, pattern matching 
+        (either id or type) and/or those which match a query or geographical query.
+      operationId: listEntities
+      tags:
+        - Entities
+      parameters:
+        - name: id
+          in: query
+          description: |
+            A comma-separated list of elements. Retrieve entities whose ID matches one of the elements 
+            in the list. Incompatible with idPattern.
+          schema:
+            type: string
+          example: "Boe_Idearium"
+        - name: type
+          in: query
+          description: |
+            A comma-separated list of elements. Retrieve entities whose type matches one of the elements 
+            in the list. Incompatible with typePattern.
+          schema:
+            type: string
+          example: "Room"
+        - name: idPattern
+          in: query
+          description: |
+            A correctly formatted regular expression. Retrieve entities whose ID matches the regular 
+            expression. Incompatible with id.
+          schema:
+            type: string
+          example: "Bode_.*"
+        - name: typePattern
+          in: query
+          description: |
+            A correctly formatted regular expression. Retrieve entities whose type matches the regular 
+            expression. Incompatible with type.
+          schema:
+            type: string
+          example: "Room_.*"
+        - name: q
+          in: query
+          description: |
+            A query expression, composed of a list of statements separated by ';'
+          schema:
+            type: string
+          example: "temperature>40"
+        - name: mq
+          in: query
+          description: |
+            A query expression for attribute metadata, composed of a list of statements separated by ';'
+          schema:
+            type: string
+          example: "temperature.accuracy<0.9"
+        - name: georel
+          in: query
+          description: Spatial relationship between matching entities and a reference shape
+          schema:
+            type: string
+            enum: [near, coveredBy, intersects, equals, disjoint]
+          example: "near"
+        - name: geometry
+          in: query
+          description: Geographical area to which the query is restricted
+          schema:
+            type: string
+            enum: [point, line, polygon, box]
+          example: "point"
+        - name: coords
+          in: query
+          description: List of latitude-longitude pairs of coordinates separated by ';'
+          schema:
+            type: string
+          example: "41.390205,2.154007;48.8566,2.3522"
+        - name: limit
+          in: query
+          description: Limits the number of entities to be retrieved
+          schema:
+            type: integer
+            minimum: 1
+          example: 20
+        - name: offset
+          in: query
+          description: Establishes the offset from where entities are retrieved
+          schema:
+            type: integer
+            minimum: 0
+          example: 100
+        - name: attrs
+          in: query
+          description: |
+            Comma-separated list of attribute names whose data are to be included in the response
+          schema:
+            type: string
+          example: "seatNumber"
+        - name: metadata
+          in: query
+          description: A list of metadata names to include in the response
+          schema:
+            type: string
+          example: "accuracy"
+        - name: orderBy
+          in: query
+          description: Criteria for ordering results
+          schema:
+            type: string
+          example: "temperature,!speed"
+        - name: options
+          in: query
+          description: |
+            A comma-separated list of options for the query. Valid options: count, keyValues, values, unique, skipForwarding
+          schema:
+            type: string
+          example: "count,keyValues"
+      responses:
+        '200':
+          description: Successful operation
+          headers:
+            Fiware-Total-Count:
+              description: Total number of entities (only when count option is used)
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Entity'
+              example:
+                - id: "DC_S1-D41"
+                  type: "Room"
+                  temperature:
+                    value: 35.6
+                    type: "Number"
+                    metadata: {}
+                  timestamp:
+                    value: "2015-06-04T07:20:27.378Z"
+                    type: "DateTime"
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    post:
+      summary: Create entity
+      description: Creates a new entity
+      operationId: createEntity
+      tags:
+        - Entities
+      parameters:
+        - name: options
+          in: query
+          description: |
+            A comma-separated list of options for the query. Valid options: keyValues, upsert
+          schema:
+            type: string
+          example: "upsert"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EntityCreation'
+      responses:
+        '201':
+          description: Entity created successfully
+          headers:
+            Location:
+              description: URL of the created entity
+              schema:
+                type: string
+                format: uri
+        '204':
+          description: Entity updated successfully (when upsert option is used)
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: Entity already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /v2/entities/{entityId}:
+    get:
+      summary: Retrieve entity
+      description: Retrieves the specified entity
+      operationId: getEntity
+      tags:
+        - Entities
+      parameters:
+        - name: entityId
+          in: path
+          required: true
+          description: ID of the entity to be retrieved
+          schema:
+            type: string
+        - name: type
+          in: query
+          description: Entity type, to avoid ambiguity in case there are several entities with the same entity id
+          schema:
+            type: string
+        - name: attrs
+          in: query
+          description: Comma-separated list of attribute names whose data must be included in the response
+          schema:
+            type: string
+        - name: metadata
+          in: query
+          description: A list of metadata names to include in the response
+          schema:
+            type: string
+        - name: options
+          in: query
+          description: Options for the query (keyValues, values, unique, skipForwarding)
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Entity'
+              example:
+                type: "Room"
+                id: "Bcn_Welt"
+                temperature:
+                  value: 21.7
+                  type: "Number"
+                humidity:
+                  value: 60
+                  type: "Number"
+                location:
+                  value:
+                    type: "Point"
+                    coordinates: [2.1864475, 41.3763726]
+                  type: "geo:json"
+                  metadata:
+                    crs:
+                      value: "WGS84"
+                      type: "Text"
+        '404':
+          description: Entity not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      summary: Remove entity
+      description: Removes the specified entity
+      operationId: deleteEntity
+      tags:
+        - Entities
+      parameters:
+        - name: entityId
+          in: path
+          required: true
+          description: ID of the entity to be removed
+          schema:
+            type: string
+        - name: type
+          in: query
+          description: Entity type, to avoid ambiguity
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Entity removed successfully
+        '404':
+          description: Entity not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /v2/entities/{entityId}/attrs:
+    get:
+      summary: Retrieve entity attributes
+      description: Retrieves all attributes of the specified entity
+      operationId: getEntityAttributes
+      tags:
+        - Entity Attributes
+      parameters:
+        - name: entityId
+          in: path
+          required: true
+          description: ID of the entity
+          schema:
+            type: string
+        - name: type
+          in: query
+          description: Entity type, to avoid ambiguity
+          schema:
+            type: string
+        - name: attrs
+          in: query
+          description: Comma-separated list of attribute names
+          schema:
+            type: string
+        - name: metadata
+          in: query
+          description: A list of metadata names to include in the response
+          schema:
+            type: string
+        - name: options
+          in: query
+          description: Options for the query (keyValues, values, unique, skipForwarding)
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  $ref: '#/components/schemas/Attribute'
+        '404':
+          description: Entity not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    post:
+      summary: Update or append entity attributes
+      description: Updates existing entity attributes or appends new ones
+      operationId: updateEntityAttributes
+      tags:
+        - Entity Attributes
+      parameters:
+        - name: entityId
+          in: path
+          required: true
+          description: ID of the entity
+          schema:
+            type: string
+        - name: type
+          in: query
+          description: Entity type, to avoid ambiguity
+          schema:
+            type: string
+        - name: options
+          in: query
+          description: Update options (append, overrideMetadata, forcedUpdate, flowControl)
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties:
+                $ref: '#/components/schemas/Attribute'
+      responses:
+        '204':
+          description: Attributes updated successfully
+        '404':
+          description: Entity not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    patch:
+      summary: Update existing entity attributes
+      description: Updates existing entity attributes (doesn't append new ones)
+      operationId: patchEntityAttributes
+      tags:
+        - Entity Attributes
+      parameters:
+        - name: entityId
+          in: path
+          required: true
+          description: ID of the entity
+          schema:
+            type: string
+        - name: type
+          in: query
+          description: Entity type, to avoid ambiguity
+          schema:
+            type: string
+        - name: options
+          in: query
+          description: Update options (overrideMetadata, forcedUpdate, flowControl)
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties:
+                $ref: '#/components/schemas/Attribute'
+      responses:
+        '204':
+          description: Attributes updated successfully
+        '404':
+          description: Entity not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    put:
+      summary: Replace all entity attributes
+      description: Replaces all entity attributes
+      operationId: replaceEntityAttributes
+      tags:
+        - Entity Attributes
+      parameters:
+        - name: entityId
+          in: path
+          required: true
+          description: ID of the entity
+          schema:
+            type: string
+        - name: type
+          in: query
+          description: Entity type, to avoid ambiguity
+          schema:
+            type: string
+        - name: options
+          in: query
+          description: Update options (overrideMetadata, forcedUpdate, flowControl)
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties:
+                $ref: '#/components/schemas/Attribute'
+      responses:
+        '204':
+          description: Attributes replaced successfully
+        '404':
+          description: Entity not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /v2/entities/{entityId}/attrs/{attrName}:
+    get:
+      summary: Get attribute data
+      description: Retrieves a specific attribute of the specified entity
+      operationId: getAttribute
+      tags:
+        - Individual Attributes
+      parameters:
+        - name: entityId
+          in: path
+          required: true
+          description: ID of the entity
+          schema:
+            type: string
+        - name: attrName
+          in: path
+          required: true
+          description: Name of the attribute
+          schema:
+            type: string
+        - name: type
+          in: query
+          description: Entity type, to avoid ambiguity
+          schema:
+            type: string
+        - name: metadata
+          in: query
+          description: A list of metadata names to include in the response
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Attribute'
+        '404':
+          description: Entity or attribute not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    put:
+      summary: Update attribute data
+      description: Updates the data of a specific attribute
+      operationId: updateAttribute
+      tags:
+        - Individual Attributes
+      parameters:
+        - name: entityId
+          in: path
+          required: true
+          description: ID of the entity
+          schema:
+            type: string
+        - name: attrName
+          in: path
+          required: true
+          description: Name of the attribute
+          schema:
+            type: string
+        - name: type
+          in: query
+          description: Entity type, to avoid ambiguity
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Attribute'
+      responses:
+        '204':
+          description: Attribute updated successfully
+        '404':
+          description: Entity not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      summary: Remove a single attribute
+      description: Removes a specific attribute from the entity
+      operationId: deleteAttribute
+      tags:
+        - Individual Attributes
+      parameters:
+        - name: entityId
+          in: path
+          required: true
+          description: ID of the entity
+          schema:
+            type: string
+        - name: attrName
+          in: path
+          required: true
+          description: Name of the attribute
+          schema:
+            type: string
+        - name: type
+          in: query
+          description: Entity type, to avoid ambiguity
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Attribute removed successfully
+        '404':
+          description: Entity or attribute not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /v2/entities/{entityId}/attrs/{attrName}/value:
+    get:
+      summary: Get attribute value
+      description: Retrieves the value of a specific attribute
+      operationId: getAttributeValue
+      tags:
+        - Attribute Values
+      parameters:
+        - name: entityId
+          in: path
+          required: true
+          description: ID of the entity
+          schema:
+            type: string
+        - name: attrName
+          in: path
+          required: true
+          description: Name of the attribute
+          schema:
+            type: string
+        - name: type
+          in: query
+          description: Entity type, to avoid ambiguity
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: string
+                  - type: number
+                  - type: boolean
+                  - type: object
+                  - type: array
+            text/plain:
+              schema:
+                type: string
+        '404':
+          description: Entity or attribute not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    put:
+      summary: Update attribute value
+      description: Updates the value of a specific attribute
+      operationId: updateAttributeValue
+      tags:
+        - Attribute Values
+      parameters:
+        - name: entityId
+          in: path
+          required: true
+          description: ID of the entity
+          schema:
+            type: string
+        - name: attrName
+          in: path
+          required: true
+          description: Name of the attribute
+          schema:
+            type: string
+        - name: type
+          in: query
+          description: Entity type, to avoid ambiguity
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - type: string
+                - type: number
+                - type: boolean
+                - type: object
+                - type: array
+          text/plain:
+            schema:
+              type: string
+      responses:
+        '204':
+          description: Attribute value updated successfully
+        '404':
+          description: Entity not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /v2/types:
+    get:
+      summary: List entity types
+      description: Retrieves a list of entity types
+      operationId: listEntityTypes
+      tags:
+        - Entity Types
+      parameters:
+        - name: limit
+          in: query
+          description: Limits the number of types to be retrieved
+          schema:
+            type: integer
+            minimum: 1
+        - name: offset
+          in: query
+          description: Establishes the offset from where types are retrieved
+          schema:
+            type: integer
+            minimum: 0
+        - name: options
+          in: query
+          description: Options for the query (count, values)
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EntityType'
+
+  /v2/types/{type}:
+    get:
+      summary: Retrieve entity information for a given type
+      description: Retrieves entity information for a specific type
+      operationId: getEntityType
+      tags:
+        - Entity Types
+      parameters:
+        - name: type
+          in: path
+          required: true
+          description: Entity type to retrieve
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EntityTypeDetails'
+        '404':
+          description: Entity type not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /v2/subscriptions:
+    get:
+      summary: List subscriptions
+      description: Retrieves a list of subscriptions
+      operationId: listSubscriptions
+      tags:
+        - Subscriptions
+      parameters:
+        - name: limit
+          in: query
+          description: Limits the number of subscriptions to be retrieved
+          schema:
+            type: integer
+            minimum: 1
+        - name: offset
+          in: query
+          description: Establishes the offset from where subscriptions are retrieved
+          schema:
+            type: integer
+            minimum: 0
+        - name: options
+          in: query
+          description: Options for the query (count)
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Subscription'
+
+    post:
+      summary: Create subscription
+      description: Creates a new subscription
+      operationId: createSubscription
+      tags:
+        - Subscriptions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubscriptionRequest'
+      responses:
+        '201':
+          description: Subscription created successfully
+          headers:
+            Location:
+              description: URL of the created subscription
+              schema:
+                type: string
+                format: uri
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /v2/subscriptions/{subscriptionId}:
+    get:
+      summary: Retrieve subscription
+      description: Retrieves a specific subscription
+      operationId: getSubscription
+      tags:
+        - Subscriptions
+      parameters:
+        - name: subscriptionId
+          in: path
+          required: true
+          description: ID of the subscription to retrieve
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Subscription'
+        '404':
+          description: Subscription not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    patch:
+      summary: Update subscription
+      description: Updates a specific subscription
+      operationId: updateSubscription
+      tags:
+        - Subscriptions
+      parameters:
+        - name: subscriptionId
+          in: path
+          required: true
+          description: ID of the subscription to update
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubscriptionUpdate'
+      responses:
+        '204':
+          description: Subscription updated successfully
+        '404':
+          description: Subscription not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      summary: Delete subscription
+      description: Deletes a specific subscription
+      operationId: deleteSubscription
+      tags:
+        - Subscriptions
+      parameters:
+        - name: subscriptionId
+          in: path
+          required: true
+          description: ID of the subscription to delete
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Subscription deleted successfully
+        '404':
+          description: Subscription not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /v2/registrations:
+    get:
+      summary: List registrations
+      description: Retrieves a list of registrations
+      operationId: listRegistrations
+      tags:
+        - Registrations
+      parameters:
+        - name: limit
+          in: query
+          description: Limits the number of registrations to be retrieved
+          schema:
+            type: integer
+            minimum: 1
+        - name: offset
+          in: query
+          description: Establishes the offset from where registrations are retrieved
+          schema:
+            type: integer
+            minimum: 0
+        - name: options
+          in: query
+          description: Options for the query (count)
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Registration'
+
+    post:
+      summary: Create registration
+      description: Creates a new registration
+      operationId: createRegistration
+      tags:
+        - Registrations
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegistrationRequest'
+      responses:
+        '201':
+          description: Registration created successfully
+          headers:
+            Location:
+              description: URL of the created registration
+              schema:
+                type: string
+                format: uri
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /v2/registrations/{registrationId}:
+    get:
+      summary: Retrieve registration
+      description: Retrieves a specific registration
+      operationId: getRegistration
+      tags:
+        - Registrations
+      parameters:
+        - name: registrationId
+          in: path
+          required: true
+          description: ID of the registration to retrieve
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Registration'
+        '404':
+          description: Registration not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      summary: Delete registration
+      description: Deletes a specific registration
+      operationId: deleteRegistration
+      tags:
+        - Registrations
+      parameters:
+        - name: registrationId
+          in: path
+          required: true
+          description: ID of the registration to delete
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Registration deleted successfully
+        '404':
+          description: Registration not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /v2/op/query:
+    post:
+      summary: Batch query
+      description: Query multiple entities in a single operation
+      operationId: batchQuery
+      tags:
+        - Batch Operations
+      parameters:
+        - name: limit
+          in: query
+          description: Limit the number of entities to be retrieved
+          schema:
+            type: integer
+            minimum: 1
+          example: 10
+        - name: offset
+          in: query
+          description: Skip a number of entities
+          schema:
+            type: integer
+            minimum: 0
+          example: 100
+        - name: orderBy
+          in: query
+          description: Criteria for ordering results
+          schema:
+            type: string
+          example: "temperature,!speed"
+        - name: options
+          in: query
+          description: |
+            A comma-separated list of options. Valid options: count, keyValues, values, unique, skipForwarding
+          schema:
+            type: string
+          example: "count"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BatchQueryRequest'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Entity'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /v2/op/update:
+    post:
+      summary: Batch update
+      description: Update multiple entities in a single operation
+      operationId: batchUpdate
+      tags:
+        - Batch Operations
+      parameters:
+        - name: options
+          in: query
+          description: |
+            A comma-separated list of options. Valid options: keyValues, overrideMetadata, forcedUpdate, flowControl
+          schema:
+            type: string
+          example: "keyValues"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BatchUpdateRequest'
+      responses:
+        '204':
+          description: Successful update
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /v2/op/notify:
+    post:
+      summary: Notify context
+      description: Notify context changes
+      operationId: notifyContext
+      tags:
+        - Batch Operations
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NotificationRequest'
+      responses:
+        '200':
+          description: Successful notification
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /version:
+    get:
+      summary: Get version
+      description: Retrieves version information of the API
+      operationId: getVersion
+      tags:
+        - API Info
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Version'
+
+  /statistics:
+    get:
+      summary: Get statistics
+      description: Retrieves statistics information
+      operationId: getStatistics
+      tags:
+        - Management
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Statistics'
+
+    delete:
+      summary: Reset statistics
+      description: Resets statistics counters
+      operationId: resetStatistics
+      tags:
+        - Management
+      responses:
+        '204':
+          description: Statistics reset successfully
+
+components:
+  parameters:
+    FiwareService:
+      name: Fiware-Service
+      in: header
+      description: Tenant or service
+      schema:
+        type: string
+        pattern: '^[a-zA-Z0-9_-]{1,50}$'
+    FiwareServicePath:
+      name: Fiware-ServicePath
+      in: header
+      description: Service path or subservice
+      schema:
+        type: string
+        pattern: '^(/[a-zA-Z0-9_-]{1,50})*$'
+
+  schemas:
+    Entity:
+      type: object
+      required:
+        - id
+        - type
+      properties:
+        id:
+          type: string
+          description: Entity identifier
+        type:
+          type: string
+          description: Entity type
+      additionalProperties:
+        $ref: '#/components/schemas/Attribute'
+      example:
+        id: "Bcn_Welt"
+        type: "Room"
+        temperature:
+          value: 21.7
+          type: "Number"
+        humidity:
+          value: 60
+          type: "Number"
+        location:
+          value:
+            type: "Point"
+            coordinates: [2.1864475, 41.3763726]
+          type: "geo:json"
+          metadata:
+            crs:
+              value: "WGS84"
+              type: "Text"
+
+    EntityCreation:
+      type: object
+      required:
+        - id
+        - type
+      properties:
+        id:
+          type: string
+          description: Entity identifier
+        type:
+          type: string
+          description: Entity type
+      additionalProperties:
+        $ref: '#/components/schemas/AttributeRequest'
+      example:
+        type: "Room"
+        id: "Bcn-Welt"
+        temperature:
+          value: 21.7
+        humidity:
+          value: 60
+        location:
+          value:
+            type: "Point"
+            coordinates: [2.1864475, 41.3763726]
+          type: "geo:json"
+          metadata:
+            crs:
+              value: "WGS84"
+
+    Attribute:
+      type: object
+      properties:
+        type:
+          type: string
+          description: Attribute NGSI type (always present in responses)
+        value:
+          description: Attribute value
+          oneOf:
+            - type: string
+            - type: number
+            - type: boolean
+            - type: object
+            - type: array
+            - type: "null"
+        metadata:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/Metadata'
+          description: Attribute metadata (empty object {} if no metadata)
+      required:
+        - value
+        - type
+      example:
+        value: 21.7
+        type: "Number"
+
+    AttributeRequest:
+      type: object
+      properties:
+        type:
+          type: string
+          description: |
+            Attribute NGSI type (optional in requests). When omitted, defaults based on value:
+            - String value → "Text"
+            - Number value → "Number" 
+            - Boolean value → "Boolean"
+            - Object/Array value → "StructuredValue"
+            - Null value → "None"
+        value:
+          description: Attribute value (may be omitted, meaning null value)
+          oneOf:
+            - type: string
+            - type: number
+            - type: boolean
+            - type: object
+            - type: array
+            - type: "null"
+        metadata:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/MetadataRequest'
+          description: Attribute metadata (may be omitted, meaning no metadata)
+      example:
+        value: 21.7
+        type: "Number"
+        metadata:
+          accuracy:
+            value: 0.1
+            type: "Number"
+
+    Metadata:
+      type: object
+      properties:
+        type:
+          type: string
+          description: Metadata NGSI type (always present in responses)
+        value:
+          description: Metadata value
+          oneOf:
+            - type: string
+            - type: number
+            - type: boolean
+            - type: object
+            - type: array
+            - type: "null"
+      required:
+        - value
+        - type
+      example:
+        value: "WGS84"
+        type: "Text"
+
+    MetadataRequest:
+      type: object
+      properties:
+        type:
+          type: string
+          description: |
+            Metadata NGSI type (optional in requests). When omitted, defaults based on value:
+            - String value → "Text"
+            - Number value → "Number"
+            - Boolean value → "Boolean" 
+            - Object/Array value → "StructuredValue"
+            - Null value → "None"
+        value:
+          description: Metadata value (may be omitted, meaning null value)
+          oneOf:
+            - type: string
+            - type: number
+            - type: boolean
+            - type: object
+            - type: array
+            - type: "null"
+      example:
+        value: "WGS84"
+        type: "Text"
+
+    EntityType:
+      type: object
+      properties:
+        type:
+          type: string
+          description: Entity type name
+        attrs:
+          type: object
+          description: Attributes associated with this type
+          additionalProperties:
+            type: object
+            properties:
+              types:
+                type: array
+                items:
+                  type: string
+        count:
+          type: integer
+          description: Number of entities of this type
+
+    EntityTypeDetails:
+      type: object
+      properties:
+        attrs:
+          type: object
+          additionalProperties:
+            type: object
+            properties:
+              types:
+                type: array
+                items:
+                  type: string
+        count:
+          type: integer
+          description: Number of entities of this type
+
+    Subscription:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Subscription identifier
+        description:
+          type: string
+          description: Subscription description
+        status:
+          type: string
+          enum: [active, inactive, failed, expired]
+          description: Subscription status
+        subject:
+          type: object
+          properties:
+            entities:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  idPattern:
+                    type: string
+                  type:
+                    type: string
+                  typePattern:
+                    type: string
+            condition:
+              type: object
+              properties:
+                attrs:
+                  type: array
+                  items:
+                    type: string
+                expression:
+                  type: object
+                  properties:
+                    q:
+                      type: string
+                    mq:
+                      type: string
+                    georel:
+                      type: string
+                    geometry:
+                      type: string
+                    coords:
+                      type: string
+        notification:
+          type: object
+          properties:
+            attrs:
+              type: array
+              items:
+                type: string
+            attrsFormat:
+              type: string
+              enum: [normalized, keyValues, values]
+            http:
+              type: object
+              properties:
+                url:
+                  type: string
+                  format: uri
+            httpCustom:
+              type: object
+              properties:
+                url:
+                  type: string
+                  format: uri
+                headers:
+                  type: object
+                  additionalProperties:
+                    type: string
+                qs:
+                  type: object
+                  additionalProperties:
+                    type: string
+                method:
+                  type: string
+                  enum: [POST, PUT, PATCH]
+                payload:
+                  type: string
+            mqtt:
+              type: object
+              properties:
+                url:
+                  type: string
+                  format: uri
+                topic:
+                  type: string
+        expires:
+          type: string
+          format: date-time
+          description: Subscription expiration time
+        throttling:
+          type: number
+          description: Throttling period in seconds
+
+    SubscriptionRequest:
+      type: object
+      required:
+        - subject
+        - notification
+      properties:
+        description:
+          type: string
+        subject:
+          type: object
+          required:
+            - entities
+          properties:
+            entities:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  idPattern:
+                    type: string
+                  type:
+                    type: string
+                  typePattern:
+                    type: string
+            condition:
+              type: object
+              properties:
+                attrs:
+                  type: array
+                  items:
+                    type: string
+                expression:
+                  type: object
+                  properties:
+                    q:
+                      type: string
+                    mq:
+                      type: string
+                    georel:
+                      type: string
+                    geometry:
+                      type: string
+                    coords:
+                      type: string
+        notification:
+          type: object
+          properties:
+            attrs:
+              type: array
+              items:
+                type: string
+            attrsFormat:
+              type: string
+              enum: [normalized, keyValues, values]
+            http:
+              type: object
+              properties:
+                url:
+                  type: string
+                  format: uri
+        expires:
+          type: string
+          format: date-time
+        throttling:
+          type: number
+      example:
+        description: "One subscription to rule them all"
+        subject:
+          entities:
+            - idPattern: ".*"
+              type: "Room"
+          condition:
+            attrs: ["temperature"]
+            expression:
+              q: "temperature>40"
+        notification:
+          http:
+            url: "http://localhost:1234"
+          attrs: ["temperature", "humidity"]
+        expires: "2025-04-05T14:00:00.00Z"
+
+    SubscriptionUpdate:
+      type: object
+      properties:
+        description:
+          type: string
+        subject:
+          type: object
+          properties:
+            entities:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  idPattern:
+                    type: string
+                  type:
+                    type: string
+                  typePattern:
+                    type: string
+            condition:
+              type: object
+              properties:
+                attrs:
+                  type: array
+                  items:
+                    type: string
+        notification:
+          type: object
+          properties:
+            attrs:
+              type: array
+              items:
+                type: string
+            http:
+              type: object
+              properties:
+                url:
+                  type: string
+                  format: uri
+        expires:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [active, inactive]
+        throttling:
+          type: number
+
+    Registration:
+      type: object
+      properties:
+        id:
+          type: string
+        description:
+          type: string
+        dataProvided:
+          type: object
+          properties:
+            entities:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  idPattern:
+                    type: string
+                  type:
+                    type: string
+                  typePattern:
+                    type: string
+            attrs:
+              type: array
+              items:
+                type: string
+        provider:
+          type: object
+          properties:
+            http:
+              type: object
+              properties:
+                url:
+                  type: string
+                  format: uri
+        expires:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [active, inactive, expired]
+
+    RegistrationRequest:
+      type: object
+      required:
+        - dataProvided
+        - provider
+      properties:
+        description:
+          type: string
+        dataProvided:
+          type: object
+          required:
+            - entities
+            - attrs
+          properties:
+            entities:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  idPattern:
+                    type: string
+                  type:
+                    type: string
+                  typePattern:
+                    type: string
+            attrs:
+              type: array
+              items:
+                type: string
+        provider:
+          type: object
+          required:
+            - http
+          properties:
+            http:
+              type: object
+              required:
+                - url
+              properties:
+                url:
+                  type: string
+                  format: uri
+        expires:
+          type: string
+          format: date-time
+
+    BatchQueryRequest:
+      type: object
+      properties:
+        entities:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              idPattern:
+                type: string
+              type:
+                type: string
+              typePattern:
+                type: string
+        attrs:
+          type: array
+          items:
+            type: string
+        expression:
+          type: object
+          properties:
+            q:
+              type: string
+            mq:
+              type: string
+            georel:
+              type: string
+            geometry:
+              type: string
+            coords:
+              type: string
+        metadata:
+          type: array
+          items:
+            type: string
+          description: List of metadata names to include in the response
+        orderBy:
+          type: array
+          items:
+            type: string
+          description: Criteria for ordering results
+      example:
+        entities:
+          - idPattern: ".*"
+            type: "Room"
+          - id: "Car"
+            type: "P-9873-K"
+        attrs: ["temperature", "humidity"]
+        expression:
+          q: "temperature>20"
+        metadata: ["accuracy", "timestamp"]
+
+    BatchUpdateRequest:
+      type: object
+      required:
+        - actionType
+        - entities
+      properties:
+        actionType:
+          type: string
+          enum: [append, appendStrict, update, delete, replace]
+          description: |
+            Kind of update action to perform:
+            - append: Create entity if it doesn't exist, or append attributes if it does
+            - appendStrict: Like append, but fails if attribute already exists
+            - update: Update existing attributes (entity must exist)
+            - delete: Delete attributes or entire entity
+            - replace: Replace all attributes of existing entities
+        entities:
+          type: array
+          items:
+            $ref: '#/components/schemas/EntityCreation'
+          description: Array of entities to be updated
+      example:
+        actionType: "append"
+        entities:
+          - type: "Room"
+            id: "Bcn-Welt"
+            temperature:
+              value: 21.7
+            humidity:
+              value: 60
+          - type: "Room"
+            id: "Mad_Aud"
+            temperature:
+              value: 22.9
+            humidity:
+              value: 85
+
+    NotificationRequest:
+      type: object
+      properties:
+        subscriptionId:
+          type: string
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Entity'
+
+    Version:
+      type: object
+      properties:
+        orion:
+          type: object
+          properties:
+            version:
+              type: string
+            uptime:
+              type: string
+            git_hash:
+              type: string
+            compile_time:
+              type: string
+            compiled_by:
+              type: string
+            compiled_in:
+              type: string
+            release_date:
+              type: string
+            machine:
+              type: string
+            doc:
+              type: string
+
+    Statistics:
+      type: object
+      properties:
+        counters:
+          type: object
+          properties:
+            deprecatedFeatures:
+              type: object
+            jsonRequests:
+              type: integer
+            noPayloadRequests:
+              type: integer
+            requests:
+              type: object
+              additionalProperties:
+                type: integer
+        measuring_interval_in_secs:
+          type: integer
+
+    Error:
+      type: object
+      required:
+        - error
+        - description
+      properties:
+        error:
+          type: string
+        description:
+          type: string
+        type:
+          type: string
+      example:
+        error: "BadRequest"
+        description: "Invalid parameter in request"
+
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+
+  headers:
+    FiwareCorrelator:
+      description: Correlator ID for tracing requests
+      schema:
+        type: string
+        format: uuid
+
+security: []
+
+tags:
+  - name: API Entry Points
+    description: API discovery endpoints
+  - name: Entities
+    description: Entity management operations
+  - name: Entity Attributes
+    description: Entity attribute management operations
+  - name: Individual Attributes
+    description: Individual attribute management operations
+  - name: Attribute Values
+    description: Attribute value management operations
+  - name: Entity Types
+    description: Entity type information operations
+  - name: Subscriptions
+    description: Subscription management operations
+  - name: Registrations
+    description: Registration management operations
+  - name: Batch Operations
+    description: Batch query and update operations
+  - name: API Info
+    description: API information operations
+  - name: Management
+    description: Management and monitoring operations
