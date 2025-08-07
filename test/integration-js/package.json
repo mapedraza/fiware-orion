@@ -1,0 +1,45 @@
+{
+  "name": "orion-api-integration-tests",
+  "version": "1.0.0",
+  "description": "Integration tests for FIWARE Orion Context Broker API based on OpenAPI specification",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:verbose": "jest --verbose"
+  },
+  "keywords": [
+    "fiware",
+    "orion",
+    "context-broker",
+    "ngsi-v2",
+    "integration-tests",
+    "api-testing"
+  ],
+  "author": "FIWARE Orion Team",
+  "license": "AGPL-3.0",
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "supertest": "^6.3.3",
+    "jest-openapi": "^0.14.2",
+    "yaml": "^2.3.4",
+    "@types/jest": "^29.5.8",
+    "@types/supertest": "^2.0.16"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "testMatch": [
+      "**/__tests__/**/*.js",
+      "**/?(*.)+(spec|test).js"
+    ],
+    "collectCoverageFrom": [
+      "**/*.js",
+      "!**/node_modules/**",
+      "!**/coverage/**"
+    ],
+    "setupFilesAfterEnv": [
+      "<rootDir>/setup.js"
+    ]
+  }
+}
